@@ -1,74 +1,69 @@
-from audioop import minmax
-
-
-class WorkPlace:
-    instances = [] #static variable
-
-    def __init__(self, name):
-        self.name = name
-        self.level = 1
-        self.expertise = ""
-        self.employees = []
-        self.capacity = 1
-        WorkPlace.instances.append(self)
-    
-    def get_price(self):
-        return Consts.BASE_PRICE[self.expertise]
-
-    def calc_costs(self):
-        pass #pass 
-
-    def calc_capacity(self):
-        pass #pass
-
-    def upgrade(self):
-        self.level +=1
-        self.capacity = self.calc_capacity()  #correct this
+class Proxy:
+    def __init__(self, obj):
+        self._obj = obj
+        self.calls = {}
+        self.last_invoked = ""
+        self.attrs = dir(self._obj)
         
-    def hire(self, person):
-        if len(self.employees) >= self.capacity:
-            raise WorkPlaceIsFull()
+    def __getattr__(self, method):
+        if method in self.attrs:
+            print("in Proxy to get")
+            d = getattr(self._obj , method)
+            d()
+            self.last_invoked =str(method)
+            if method in self.calls:
+                self.calls[method] += 1
+            else:
+                self.calls[method] = 0
         else:
-            self.employees.append(person) #mybe need
-            person.work_place = self
+            print("Oops!no method like this!")
+            raise Exception('No Method Is Invoked')
+            
+        self.last_invoked =str(method)
+        self.calls[method] += 1
+          
+    
+    #def __setattr__(self, value):
+    #    pass
 
-    def get_expertise(self):
-        return self.expertise
+    def count_of_calls(self, method_name):
+        try:
+            return self.calls[method_name]
+        except:
+            return 0
+        
 
-    def calc(self):
-        return -(self.calc_costs())
+    def was_called(self, method_name):
+        if self.calls[method_name] != None:
+            return True
+        return False
+ 
 
-    @staticmethod
-    def calc_all():
-        sum = 0
-        for i in WorkPlace.instances:
-            sum += i.calc()
+   
+class Radio():   
+    def __init__(self):        
+        self._channel = None        
+        self.is_on = False        
+        self.volume = 0        
 
-class WorkPlaceIsFull(Exception):
-    def __str__(self):
-        return "work place is full!"
+    #def __getattribute__(self, method): #clean it!
+    #    pass
 
-class Consts:
-    BASE_PRICE = {'mine': 150, 'school': 100, 'company': 90}
+    
+    def get_channel(self): 
+        print(self._channel)
+        return self._channel    
 
-class Person:
-            pass
+    def set_channel(self, value):        
+        self._channel = value        
 
+    def power(self):        
+        self.is_on = not self.is_on
 
-w = WorkPlace("quera")
-w.expertise = "mine"
-w.capacity = 3
-p = Person()
-p.name = 'sina'
-p.work_place = None
-w.hire(p)
-p2 = Person()
-p2.name = 'mina'
-p2.work_place = None
-w.hire(p2)
-
-for wp in WorkPlace.instances:
-    print(wp.name, wp.capacity)
-
-for p in w.employees:
-    print(p.name, p.work_place)
+print("Get start!")      
+r = Radio()
+r._channel = "kerman"
+p = Proxy(r)
+getattr(p,'get_channel')
+#print(getattr(p,'get_channel'))
+#print(p.call('s_channel'))
